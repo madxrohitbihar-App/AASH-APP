@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MADXROHITBIHAR | App Unlock Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #05050a;
+            --bg-card: rgba(13, 15, 26, 0.9);
+            --border-neon: rgba(0, 242, 254, 0.3);
+            --neon-cyan: #00f2fe;
+            --neon-green: #00ff66;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --gradient-btn: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+        }
+        body { background-color: var(--bg-deep); color: var(--text-primary); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: radial-gradient(circle at 50% -20%, #1a1c3a 0%, var(--bg-deep) 70%); font-family: sans-serif; }
+        .card { background: var(--bg-card); border: 1px solid var(--border-neon); padding: 30px; border-radius: 20px; text-align: center; max-width: 360px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        h2 { color: var(--neon-cyan); margin-bottom: 10px; }
+        .key-input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-neon); background: rgba(255,255,255,0.05); color: #fff; text-align: center; margin-bottom: 15px; outline: none; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+        .btn { padding: 12px; border-radius: 12px; color: white; border: none; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px; }
+        .btn-get { background: rgba(255, 255, 255, 0.1); border: 1px solid var(--border-neon); }
+        .btn-verify { background: var(--gradient-btn); }
+        #status-msg { font-size: 13px; margin-top: 10px; font-weight: bold; }
+        #mainAppContent { display: none; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="authScreen">
+        <h2>Device Verification</h2>
+        <p style="color:var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Get Key par click karke access key generate karein aur niche paste karein.</p>
+        
+        <input type="text" id="accessKeyInput" class="key-input" placeholder="ENTER ACCESS TOKEN">
+        
+        <button class="btn btn-get" onclick="openAroLinks()">
+            <i class="fa-solid fa-key"></i> Get Key
+        </button>
+        <button class="btn btn-verify" onclick="verifyUserKey()">
+            <i class="fa-solid fa-unlock"></i> Verify & Open App
+        </button>
+
+        <div id="status-msg"></div>
+    </div>
+
+    <div id="mainAppContent">
+        <h1 style="color: var(--neon-green);">Welcome to MADXROHITBIHAR!</h1>
+        <p style="color:var(--text-secondary);">App successfully unlocked for 24 Hours!</p>
+    </div>
+
+    <script>
+        // Check on page load if 24 hours session is still valid
+        window.onload = function() {
+            const expiryTime = localStorage.getItem("app_expiry_time");
+            if (expiryTime && new Date().getTime() < parseInt(expiryTime)) {
+                document.getElementById('authScreen').style.display = 'none';
+                document.getElementById('mainAppContent').style.display = 'block';
+            }
+        };
+
+        // Generate 21-letter hidden key backend logic
+        function generateSecretKey() {
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let generatedKey = '';
+            for (let i = 0; i < 21; i++) {
+                generatedKey += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return generatedKey;
+        }
+
+        function openAroLinks() {
+            const apiToken = "828c34db80ec53e94e7174f5f52e0b274a38ab2d";
+            const freshKey = generateSecretKey();
+            localStorage.setItem("expected_app_key", freshKey);
+
+            const targetUrl = "https://madxrohit-bihar.github.io/ALL-INSTITUTE-MADXROHITBIHAR/?key=" + freshKey;
+            const apiUrl = `https://arolinks.com/api?api=${apiToken}&url=${encodeURIComponent(targetUrl)}`;
+
+            const msgDiv = document.getElementById("status-msg");
+            msgDiv.style.color = "#00f2fe";
+            msgDiv.innerText = "Generating Link...";
+            
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success" && data.shortenedUrl) {
+                        window.location.href = data.shortenedUrl;
+                    } else {
+                        msgDiv.style.color = "#ff4d4d";
+                        msgDiv.innerText = "Error generating link!";
+                    }
+                })
+                .catch(() => {
+                    msgDiv.style.color = "#ff4d4d";
+                    msgDiv.innerText = "Network Error!";
+                });
+        }
+
+        function verifyUserKey() {
+            const userKey = document.getElementById("accessKeyInput").value.trim().toUpperCase();
+            const expectedKey = localStorage.getItem("expected_app_key");
+            const msgDiv = document.getElementById("status-msg");
+
+            // Verify key and grant 24 hours access
+            if (expectedKey && userKey === expectedKey) {
+                // Set expiry time to 24 hours from now (24 * 60 * 60 * 1000 ms)
+                const twentyFourHours = 24 * 60 * 60 * 1000;
+                const expiryTimestamp = new Date().getTime() + twentyFourHours;
+                localStorage.setItem("app_expiry_time", expiryTimestamp);
+
+                document.getElementById('authScreen').style.display = 'none';
+                document.getElementById('mainAppContent').style.display = 'block';
+            } else {
+                msgDiv.style.color = "#ff4d4d";
+                msgDiv.innerText = "Invalid Key!";
+            }
+        }
+    </script>
+</body>
+</html>
